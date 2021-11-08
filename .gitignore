@@ -1,0 +1,7 @@
+# docker
+/weg-test/backing-service/postgres-data/
+
+
+# idea
+/weg-test/.idea/
+.idea
