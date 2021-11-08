@@ -1,0 +1,87 @@
+definitions:
+  api.CloudFileInfoReq:
+    type: object
+info:
+  contact: {}
+paths:
+  /cloud/file/{id}:
+    get:
+      consumes:
+      - application/json
+      description: 파일 다운로드 요청 조회
+      parameters:
+      - description: id입니다.
+        in: path
+        name: id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: 파일 다운로드 요청 조회
+  /cloud/file/sending:
+    get:
+      consumes:
+      - application/octet-stream
+      description: 다운로드는 업로드 먼저 진행 하고 할것
+      produces:
+      - application/octet-stream
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: filedownload
+    post:
+      consumes:
+      - application/octet-stream
+      description: 파일 업로드
+      parameters:
+      - description: uploadFile
+        in: formData
+        name: fileSelect
+        type: file
+      produces:
+      - application/octet-stream
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: fileUpload
+  /cloud/fileInfo:
+    get:
+      consumes:
+      - application/json
+      description: 파일 리스트 조회
+      parameters:
+      - description: cloudFileInfoReq
+        in: body
+        name: CloudFileInfoReq
+        schema:
+          $ref: '#/definitions/api.CloudFileInfoReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: 파일 리스트 조회
+  /kafka:
+    get:
+      consumes:
+      - application/json
+      description: kafka test
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: kafka test
+swagger: "2.0"

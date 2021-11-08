@@ -1,0 +1,137 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "contact": {}
+    },
+    "paths": {
+        "/cloud/file/sending": {
+            "get": {
+                "description": "다운로드는 업로드 먼저 진행 하고 할것",
+                "consumes": [
+                    "application/octet-stream"
+                ],
+                "produces": [
+                    "application/octet-stream"
+                ],
+                "summary": "filedownload",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "파일 업로드",
+                "consumes": [
+                    "application/octet-stream"
+                ],
+                "produces": [
+                    "application/octet-stream"
+                ],
+                "summary": "fileUpload",
+                "parameters": [
+                    {
+                        "type": "file",
+                        "description": "uploadFile",
+                        "name": "fileSelect",
+                        "in": "formData"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/cloud/file/{id}": {
+            "get": {
+                "description": "파일 다운로드 요청 조회",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "파일 다운로드 요청 조회",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "id입니다.",
+                        "name": "id",
+                        "in": "path"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/cloud/fileInfo": {
+            "get": {
+                "description": "파일 리스트 조회",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "파일 리스트 조회",
+                "parameters": [
+                    {
+                        "description": "cloudFileInfoReq",
+                        "name": "CloudFileInfoReq",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/api.CloudFileInfoReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/kafka": {
+            "get": {
+                "description": "kafka test",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "kafka test",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "api.CloudFileInfoReq": {
+            "type": "object"
+        }
+    }
+}

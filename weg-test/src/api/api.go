@@ -12,9 +12,16 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 
 	db "weg-test/src/db"
 )
+
+type CloudFileInfoReq struct {
+	name string `json:"name"`
+	abcd int `json:"abcd"`
+}
 
 var fileName string = ""
 
@@ -29,18 +36,45 @@ func Router() {
 	router.POST("/cloud/file", insertFileUpdate)
 	router.POST("/cloud/file/sending", fileUpload)
 	router.DELETE("/cloud/file", deleteFile)
+	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	router.Run("localhost:8080")
 }
 
+// CFS godoc
+// @Summary 파일 리스트 조회
+// @Description 파일 리스트 조회
+// @name get-string-by-int
+// @Accept  json
+// @Produce  json
+// @Param CloudFileInfoReq body CloudFileInfoReq false "cloudFileInfoReq"
+// @Router /cloud/fileInfo [get]
+// @Success 200 {object} string
 func getFileInfo(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, db.SelectFileInfo())
 }
 
+// CFS godoc
+// @Summary 파일 다운로드 요청 조회
+// @Description 파일 다운로드 요청 조회
+// @name get-string-by-int
+// @Accept  json
+// @Produce  json
+// @Param id path string false "id입니다."
+// @Router /cloud/file/{id} [get]
+// @Success 200 {object} string
 func getFileReq(c *gin.Context) {
 	id := c.Param("id")
 	c.IndentedJSON(http.StatusOK, db.SelectFileReq(id))
 }
 
+// CFS godoc
+// @Summary kafka test
+// @Description kafka test
+// @name get-string-by-int
+// @Accept  json
+// @Produce  json
+// @Router /kafka [get]
+// @Success 200 {object} string
 func testKafka(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, db.TestKafka())
 }
@@ -67,6 +101,16 @@ func insertFileUpdate(c *gin.Context) {
 	c.IndentedJSON(http.StatusCreated, data)
 }
 
+// CFS godoc
+// @Summary fileUpload
+// @Description 파일 업로드
+// @name get-string-by-int
+// @Accept  octet-stream
+// @Produce  octet-stream
+// @Format binary
+// @Param fileSelect formData file false "uploadFile"
+// @Router /cloud/file/sending [post]
+// @Success 200 {object} string
 func fileUpload(c *gin.Context) {
 	body := c.Request.Body
 
@@ -93,6 +137,14 @@ func fileUpload(c *gin.Context) {
 	c.IndentedJSON(http.StatusCreated, "200")
 }
 
+// CFS godoc
+// @Summary filedownload
+// @Description 다운로드는 업로드 먼저 진행 하고 할것
+// @name get-string-by-int
+// @Accept  octet-stream
+// @Produce  octet-stream
+// @Router /cloud/file/sending [get]
+// @Success 200 {object} string
 func getFileDownload(c *gin.Context) {
 //	id := c.Param("id")
 	c.Header("Content-Type", "application/octet-stream")
