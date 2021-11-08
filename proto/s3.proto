@@ -1,0 +1,47 @@
+syntax = "proto3";
+
+package generated;
+
+import "google/api/annotations.proto";
+
+option go_package = "api-server-poc/proto/generated";
+
+service S3ManagerService {
+  rpc Upload (UploadRequest) returns (Result) {
+      option (google.api.http) = {
+        post: "/v1/upload"
+        body: "*"
+      };
+  }
+  rpc Download (DownloadRequest) returns (Result) {
+    option (google.api.http) = {
+      get: "/v1/download/${filename}"
+    };
+}
+}
+
+message UploadRequest {
+  string filename = 1;
+  string myBucket = 2;
+  string myString = 3;
+}
+
+message DownloadRequest {
+  string filename = 1;
+  string myBucket = 2;
+  string myString = 3;
+}
+
+message Result {
+  ResultCode resultCode = 1;
+    string message = 2;
+}
+
+enum ResultCode {
+  //기본값
+  UNKNOWN = 0;
+  //수집 성공
+  SUCCESS = 1;
+  //메시지 포멧 에러
+  MESSAGE_ERROR = 2;
+}

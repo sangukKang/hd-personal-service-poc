@@ -1,0 +1,159 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "s3.proto",
+    "version": "version not set"
+  },
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/v1/download": {
+      "get": {
+        "operationId": "S3ManagerService_Download",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/generatedResult"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "filename",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "myBucket",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "myString",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "S3ManagerService"
+        ]
+      }
+    },
+    "/v1/upload": {
+      "post": {
+        "operationId": "S3ManagerService_Upload",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/generatedResult"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/generatedUploadRequest"
+            }
+          }
+        ],
+        "tags": [
+          "S3ManagerService"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "generatedResult": {
+      "type": "object",
+      "properties": {
+        "resultCode": {
+          "$ref": "#/definitions/generatedResultCode"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "generatedResultCode": {
+      "type": "string",
+      "enum": [
+        "UNKNOWN",
+        "SUCCESS",
+        "MESSAGE_ERROR"
+      ],
+      "default": "UNKNOWN",
+      "title": "- UNKNOWN: 기본값\n - SUCCESS: 수집 성공\n - MESSAGE_ERROR: 메시지 포멧 에러"
+    },
+    "generatedUploadRequest": {
+      "type": "object",
+      "properties": {
+        "filename": {
+          "type": "string"
+        },
+        "myBucket": {
+          "type": "string"
+        },
+        "myString": {
+          "type": "string"
+        }
+      }
+    },
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "type_url": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string",
+          "format": "byte"
+        }
+      }
+    },
+    "runtimeError": {
+      "type": "object",
+      "properties": {
+        "error": {
+          "type": "string"
+        },
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    }
+  }
+}
