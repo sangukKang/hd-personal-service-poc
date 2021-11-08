@@ -24,8 +24,6 @@ func (a Item) Value() (driver.Value, error) {
 	return json.Marshal(a)
 }
 
-// Make the Attrs struct implement the sql.Scanner interface. This method
-// simply decodes a JSON-encoded value into the struct fields.
 func (a *Item) Scan(value interface{}) error {
 	b, ok := value.([]byte)
 	if !ok {
@@ -35,7 +33,32 @@ func (a *Item) Scan(value interface{}) error {
 	return json.Unmarshal(b, &a)
 }
 
-func Select(userId string) string{
+func SelectFileInfo() string{
+	db, err := getDB()
+	checkError(err)
+
+	err = db.Ping()
+	checkError(err)
+	fmt.Println("Successfully created connection to database")
+
+	//	Read rows from table.
+	var b bytes.Buffer
+	b.WriteString("SELECT json_agg(inventory) as name from inventory; ")
+	b.WriteString(";")
+
+	var str = b.String()
+	//	var sql_statement = "SELECT * from inventory" + b.string()
+
+	var res string
+	err = db.QueryRow(str).Scan(&res)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(res)
+	return res
+}
+
+func SelectFileReq(userId string) string{
 
 	db, err := getDB()
 	checkError(err)
@@ -44,7 +67,7 @@ func Select(userId string) string{
 	checkError(err)
 	fmt.Println("Successfully created connection to database")
 
-//	Read rows from table.
+	//	Read rows from table.
 	var b bytes.Buffer
 	b.WriteString("SELECT json_agg(inventory) as name from inventory ")
 
@@ -54,11 +77,11 @@ func Select(userId string) string{
 		b.WriteString("where id = '")
 		b.WriteString(userId)
 		b.WriteString("';")
-	}else{ 
+	}else{
 		b.WriteString(";")
-	}	
+	}
 	var str = b.String()
-//	var sql_statement = "SELECT * from inventory" + b.string()
+	//	var sql_statement = "SELECT * from inventory" + b.string()
 
 	var res string
 	err = db.QueryRow(str).Scan(&res)
@@ -66,28 +89,13 @@ func Select(userId string) string{
 		log.Fatal(err)
 	}
 	fmt.Println(res)
+	return res
+}
 
+func TestKafka() string{
 	kafka.Producer()
 	go kafka.Consumer()
-//	c.JSON(200, container)
-//	defer rows.Close()
-	
-//	columns, err := rows.Columns()
-//	fmt.Println("columns : " , columns)
-
-
-	//for rows.Next() {
-	//	switch err := rows.Scan(&aa); err {
-	//	case sql.ErrNoRows:
-	//		fmt.Println("No rows were returned")
-	//	case nil:
-	//		fmt.Printf("Data row = (%s)\n", aa)
-	//	default:
-	//		checkError(err)
-	//	}
-	//}
-	//log.Printf("Item: %d, Name: %s, Weight: %.2fkg", item.id, item.name, item.quantity)
-	return res
+	return ""
 }
 
 func SQLToJSON(rows *sql.Rows) ([]byte, error) {

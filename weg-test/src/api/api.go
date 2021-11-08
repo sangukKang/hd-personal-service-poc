@@ -21,26 +21,31 @@ var fileName string = ""
 func Router() {
 //	db.Insert()
 	router := gin.Default()
-	router.GET("/psnsvc", getPsnsvc)
-	router.GET("/psnsvc/:id", getPsnsvc)
-	router.GET("/psnsvc/download/:id", getFileDownload)
-	router.GET("/psnsvc/sync/:id", getPsnsvcSyncByID)
-	router.POST("/psnsvc", postPsnsvc)
-	router.POST("/psnsvc/upload", postUpload)
-	router.DELETE("/psnsvc/:id", deletePsnsvcByID)
+	router.GET("/cloud/fileInfo", getFileInfo)
+	router.GET("/cloud/file/:id", getFileReq)
+	router.GET("/kafka", testKafka)
+	router.GET("/cloud/file/sending", getFileDownload)
+	router.GET("/cloud/fileSync", getFileSync)
+	router.POST("/cloud/file", insertFileUpdate)
+	router.POST("/cloud/file/sending", fileUpload)
+	router.DELETE("/cloud/file", deleteFile)
 	router.Run("localhost:8080")
 }
 
-// getAlbums responds with the list of all albums as JSON.
-func getPsnsvc(c *gin.Context) {
-	id := c.Param("id")
-
-	c.IndentedJSON(http.StatusOK, db.Select(id))
+func getFileInfo(c *gin.Context) {
+	c.IndentedJSON(http.StatusOK, db.SelectFileInfo())
 }
 
+func getFileReq(c *gin.Context) {
+	id := c.Param("id")
+	c.IndentedJSON(http.StatusOK, db.SelectFileReq(id))
+}
 
-// postAlbums adds an album from JSON received in the request body.
-func postPsnsvc(c *gin.Context) {
+func testKafka(c *gin.Context) {
+	c.IndentedJSON(http.StatusOK, db.TestKafka())
+}
+
+func insertFileUpdate(c *gin.Context) {
 	tid := c.Request.Header.Get("tid")
 
 	fmt.Println("tid : ",tid)
@@ -54,7 +59,7 @@ func postPsnsvc(c *gin.Context) {
 	var data map[string]interface{}
 
 
-	json.Unmarshal([]byte(value), &data) // JSON을 Go언어 자료형으로 변환(여기서는 map으로 변환)
+	json.Unmarshal([]byte(value), &data)
 
 	data["Tid"] = tid
 
@@ -62,8 +67,7 @@ func postPsnsvc(c *gin.Context) {
 	c.IndentedJSON(http.StatusCreated, data)
 }
 
-// postAlbums adds an album from JSON received in the request body.
-func postUpload(c *gin.Context) {
+func fileUpload(c *gin.Context) {
 	body := c.Request.Body
 
 	b, err :=ioutil.ReadAll(body)
@@ -99,13 +103,13 @@ func getFileDownload(c *gin.Context) {
 //	c.IndentedJSON(http.StatusNotFound, gin.H{"message": "data not found"})
 }
 
-func getPsnsvcSyncByID(c *gin.Context) {
+func getFileSync(c *gin.Context) {
 //	id := c.Param("id")
 
 	c.IndentedJSON(http.StatusNotFound, gin.H{"message": "id not found"})
 }
 
-func deletePsnsvcByID(c *gin.Context) {
+func deleteFile(c *gin.Context) {
 	id := c.Param("id")
 	db.Delete(id)
 	c.IndentedJSON(http.StatusNotFound, gin.H{"message": "id not found"})
