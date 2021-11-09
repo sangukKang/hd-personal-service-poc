@@ -2,7 +2,6 @@ package api
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -16,6 +15,7 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 
 	db "weg-test/src/db"
+	s3 "weg-test/src/s3"
 )
 
 type CloudFileInfoReq struct {
@@ -26,7 +26,10 @@ type CloudFileInfoReq struct {
 var fileName string = ""
 
 func Router() {
-//	db.Insert()
+	s3.LoadEnv()
+
+	sess := s3.ConnectAws()
+
 	router := gin.Default()
 	router.GET("/cloud/fileInfo", getFileInfo)
 	router.GET("/cloud/file/:id", getFileReq)
@@ -37,6 +40,16 @@ func Router() {
 	router.POST("/cloud/file/sending", fileUpload)
 	router.DELETE("/cloud/file", deleteFile)
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+
+	//S3 Test
+	router.Use(func(c *gin.Context) {
+		c.Set("sess", sess)
+		c.Next()
+	})
+	router.POST("/s3/upload", s3FileUpload)
+	router.GET("/s3/download", getS3FileDownload)
+
+
 	router.Run("localhost:8080")
 }
 
@@ -123,7 +136,7 @@ func fileUpload(c *gin.Context) {
 
 	fmt.Println("fileName : ","c:/tmp/data"+fileName)
 
-	if err := ensureDir("c:/tmp"); err != nil {
+	if err := s3.EnsureDir("c:/tmp"); err != nil {
 		fmt.Println("Directory creation failed with error: " + err.Error())
 		os.Exit(1)
 	}
@@ -155,6 +168,56 @@ func getFileDownload(c *gin.Context) {
 //	c.IndentedJSON(http.StatusNotFound, gin.H{"message": "data not found"})
 }
 
+
+// CFS godoc
+// @Summary s3 fileUpload
+// @Description 파일 업로드
+// @name get-string-by-int
+// @Accept  octet-stream
+// @Produce  octet-stream
+// @Format binary
+// @Param fileSelect formData file false "uploadFile"
+// @Router /s3/upload [post]
+// @Success 200 {object} string
+func s3FileUpload(c *gin.Context) {
+	//body := c.Request.Body
+	//
+	//b, err :=ioutil.ReadAll(body)
+	//if err != nil {
+	//	log.Fatal(err)
+	//}
+	//
+	//fileName := "c:/tmp/data"+strconv.FormatInt(time.Now().UnixNano(),10)
+	//
+	//fmt.Println("fileName : ","c:/tmp/data"+fileName)
+	//
+	//if err := ensureDir("c:/tmp"); err != nil {
+	//	fmt.Println("Directory creation failed with error: " + err.Error())
+	//	os.Exit(1)
+	//}
+	//
+	//
+	//err = ioutil.WriteFile(fileName, b, 0644)
+	//
+	//if err != nil {
+	//	log.Fatal(err)
+	//}
+
+	s3.Upload(c)
+}
+
+// CFS godoc
+// @Summary s3 filedownload
+// @Description 다운로드는 업로드 먼저 진행 하고 할것
+// @name get-string-by-int
+// @Accept  octet-stream
+// @Produce  octet-stream
+// @Router /s3/download [get]
+// @Success 200 {object} string
+func getS3FileDownload(c *gin.Context) {
+	s3.Download(c)
+}
+
 func getFileSync(c *gin.Context) {
 //	id := c.Param("id")
 
@@ -165,23 +228,4 @@ func deleteFile(c *gin.Context) {
 	id := c.Param("id")
 	db.Delete(id)
 	c.IndentedJSON(http.StatusNotFound, gin.H{"message": "id not found"})
-}
-
-func ensureDir(dirName string) error {
-	err := os.Mkdir(dirName, os.ModeDir)
-	if err == nil {
-		return nil
-	}
-	if os.IsExist(err) {
-		// check that the existing path is a directory
-		info, err := os.Stat(dirName)
-		if err != nil {
-			return err
-		}
-		if !info.IsDir() {
-			return errors.New("path exists but is not a directory")
-		}
-		return nil
-	}
-	return err
 }
