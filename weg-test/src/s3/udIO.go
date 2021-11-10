@@ -1,6 +1,7 @@
 package s3
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
@@ -14,6 +15,8 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
+	"sync/atomic"
 	"time"
 )
 
@@ -22,6 +25,8 @@ var SecretAccessKey string
 var MyRegion string
 var MyBucket string
 var filepath string
+
+var ops uint64
 
 //GetEnvWithKey : get env value
 func GetEnvWithKey(key string) string {
@@ -61,42 +66,6 @@ func ConnectAws() *session.Session {
 }
 
 func Upload(c *gin.Context) {
-	//body := c.Request.Body
-	//
-	//b, err :=ioutil.ReadAll(body)
-	//if err != nil {
-	//	log.Fatal(err)
-	//}
-	//
-	//buffer := []byte(b)
-	//
-	//fmt.Println("Uploaded", len(b))
-	//
-	//sess := c.MustGet("sess").(*session.Session)
-	//uploader := s3manager.NewUploader(sess)
-	//
-	//filename := "test"
-	//
-	//fmt.Println("Upload", uploader," - ", filename)
-	//
-	////upload to the s3 bucket
-	//up, err := uploader.Upload(&s3manager.UploadInput{
-	//	Bucket: aws.String(GetEnvWithKey("BUCKET_NAME")),
-	//	Key:    aws.String(filename),
-	//	Body:   bytes.NewReader(buffer),
-	//})
-	//
-	//if err != nil {
-	//	c.JSON(http.StatusInternalServerError, gin.H{
-	//		"error":    "Failed to upload file",
-	//		"uploader": up,
-	//	})
-	//	return
-	//}
-	//filepath = "https://" + MyBucket + "." + "s3-" + MyRegion + ".amazonaws.com/" + filename
-	//c.JSON(http.StatusOK, gin.H{
-	//	"filepath":    filepath,
-	//})
 
 	startTime := time.Now()
 
@@ -107,68 +76,117 @@ func Upload(c *gin.Context) {
 		log.Fatal(err)
 	}
 
+	body = nil
+	c.Request.Body.Close()
+
+	buffer := []byte(b)
+
 	var elapsedTime = time.Since(startTime)
-	fmt.Printf("body read byte: %s\n", elapsedTime.Seconds())
+//	fmt.Println("Uploaded", len(b))
 
-	var filename = "c:/tmp/test"
+	s3sess := c.MustGet("s3sess").(*session.Session)
+	uploader := s3manager.NewUploader(s3sess)
 
-	fmt.Println("fileName : ",filename)
+	atomic.AddUint64(&ops, 1)
 
-	if err := EnsureDir("c:/tmp"); err != nil {
-		fmt.Println("Directory creation failed with error: " + err.Error())
-		os.Exit(1)
-	}
+	filename := "test"+strconv.FormatUint(ops,10)+""+strconv.FormatInt(time.Now().UnixNano(),10)
 
-
-	err = ioutil.WriteFile(filename, b, 0644)
-
-	elapsedTime = time.Since(startTime)
-	fmt.Printf("write file: %s\n", elapsedTime.Seconds())
-
-	file, err := os.Open(filename)
-	if err != nil {
-
-	}
-	defer file.Close()
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	elapsedTime = time.Since(startTime)
-	fmt.Printf("open file: %s\n", elapsedTime.Seconds())
-
-	sess := c.MustGet("sess").(*session.Session)
-	uploader := s3manager.NewUploader(sess)
-
-	fmt.Println("Upload", uploader," - ", filename)
+//	fmt.Println("Upload", uploader," - ", filename)
 
 	//upload to the s3 bucket
-	up, err := uploader.Upload(&s3manager.UploadInput{
-		Bucket: aws.String(GetEnvWithKey("BUCKET_NAME")),
-		Key:    aws.String(filename),
-		Body:   file,
-	})
 
-	elapsedTime = time.Since(startTime)
-	fmt.Printf("s3 upload file: %s\n", elapsedTime.Seconds())
+	fmt.Printf("filename: %s", filename)
+	uploadS3(buffer,filename,uploader)
 
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error":    "Failed to upload file",
-			"uploader": up,
-		})
-		return
-	}
+//	buffer = nil
+
+	//elapsedTime = time.Since(startTime)
+	//fmt.Printf("s3 upload file: %s\n", elapsedTime.Seconds())
+	//if err != nil {
+	//	c.JSON(http.StatusInternalServerError, gin.H{
+	//		"error":    "Failed to upload file",
+	//		"uploader": up,
+	//	})
+	//	return
+	//}
 	filepath = "https://" + MyBucket + "." + "s3-" + MyRegion + ".amazonaws.com/" + filename
 	c.JSON(http.StatusOK, gin.H{
 		"filepath":    filepath,
 	})
-
 	elapsedTime = time.Since(startTime)
-	fmt.Printf("response: %s\n", elapsedTime.Seconds())
+	fmt.Printf("response: %s", elapsedTime.Seconds())
 
-	os.Remove(filename)
+//	startTime := time.Now()
+//
+//	body := c.Request.Body
+//
+//	b, err :=ioutil.ReadAll(body)
+//	if err != nil {
+//		log.Fatal(err)
+//	}
+//
+//	var elapsedTime = time.Since(startTime)
+//	fmt.Printf("body read byte: %s\n", elapsedTime.Seconds())
+//
+//	var filename = "c:/tmp/test"
+//
+//	fmt.Println("fileName : ",filename)
+//
+//	if err := EnsureDir("c:/tmp"); err != nil {
+//		fmt.Println("Directory creation failed with error: " + err.Error())
+//		os.Exit(1)
+//	}
+//
+//
+//	err = ioutil.WriteFile(filename, b, 0644)
+//
+//	elapsedTime = time.Since(startTime)
+//	fmt.Printf("write file: %s\n", elapsedTime.Seconds())
+//
+//	file, err := os.Open(filename)
+//	if err != nil {
+//
+//	}
+//	defer file.Close()
+//
+//	if err != nil {
+//		log.Fatal(err)
+//	}
+//
+//	elapsedTime = time.Since(startTime)
+//	fmt.Printf("open file: %s\n", elapsedTime.Seconds())
+//
+////	sess := c.MustGet("sess").(*session.Session)
+//	uploader := s3manager.NewUploader(sess)
+//
+//	fmt.Println("Upload", uploader," - ", filename)
+//
+//	//upload to the s3 bucket
+//	up, err := uploader.Upload(&s3manager.UploadInput{
+//		Bucket: aws.String(GetEnvWithKey("BUCKET_NAME")),
+//		Key:    aws.String(filename),
+//		Body:   file,
+//	})
+//
+//	elapsedTime = time.Since(startTime)
+//	fmt.Printf("s3 upload file: %s\n", elapsedTime.Seconds())
+//
+//	if err != nil {
+//		c.JSON(http.StatusInternalServerError, gin.H{
+//			"error":    "Failed to upload file",
+//			"uploader": up,
+//		})
+//		return
+//	}
+//	filepath = "https://" + MyBucket + "." + "s3-" + MyRegion + ".amazonaws.com/" + filename
+//	c.JSON(http.StatusOK, gin.H{
+//		"filepath":    filepath,
+//	})
+//
+//	elapsedTime = time.Since(startTime)
+//	fmt.Printf("response: %s\n", elapsedTime.Seconds())
+//
+//	os.Remove(filename)
 }
 
 func Download(c *gin.Context)  {
@@ -250,4 +268,20 @@ func EnsureDir(dirName string) error {
 		return nil
 	}
 	return err
+}
+
+func uploadS3(b []byte,filename string, uploader *s3manager.Uploader) {
+	go func() {
+		_, err := uploader.Upload(&s3manager.UploadInput{
+			Bucket: aws.String(GetEnvWithKey("BUCKET_NAME")),
+			Key:    aws.String(filename),
+			Body:   bytes.NewReader(b),
+		})
+		if err != nil {
+			log.Fatal(err)
+			b = nil
+			return
+		}
+		b = nil
+	}()
 }

@@ -2,12 +2,15 @@ package main
 
 import (
 	"fmt"
+	"runtime"
 	docs "weg-test/docs"
 	api "weg-test/src/api"
 )
 
 
 func main() {
+	runtime.GOMAXPROCS(runtime.NumCPU())
+
 	fmt.Println("Server start")
 	docs.SwaggerInfo.Title = "Swagger Example API"
 	docs.SwaggerInfo.Description = "This is a sample server."

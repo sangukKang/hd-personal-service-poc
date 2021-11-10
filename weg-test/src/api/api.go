@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/json"
 	"fmt"
+	//	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -10,10 +11,10 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/easonlin404/limit"
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
-
 	db "weg-test/src/db"
 	s3 "weg-test/src/s3"
 )
@@ -27,10 +28,26 @@ var fileName string = ""
 
 func Router() {
 	s3.LoadEnv()
+	s3sess := s3.ConnectAws()
 
-	sess := s3.ConnectAws()
-
+//	uploader := s3manager.NewUploader(sess)
 	router := gin.Default()
+	s := &http.Server{
+		Addr:           "localhost:8080",
+		Handler:        router,
+//		ReadTimeout:    30 * time.Second,
+//		WriteTimeout:   30 * time.Second,
+		//  MaxHeaderBytes: 1 << 20,
+	}
+//	s.SetKeepAlivesEnabled(false)
+
+	_ = &http.Transport{
+		IdleConnTimeout:     10 * time.Second,
+		MaxIdleConnsPerHost: 1000,
+	}
+
+
+	router.Use(limit.Limit(2000))
 	router.GET("/cloud/fileInfo", getFileInfo)
 	router.GET("/cloud/file/:id", getFileReq)
 	router.GET("/kafka", testKafka)
@@ -43,14 +60,20 @@ func Router() {
 
 	//S3 Test
 	router.Use(func(c *gin.Context) {
-		c.Set("sess", sess)
+		c.Set("s3sess", s3sess)
 		c.Next()
 	})
-	router.POST("/s3/upload", s3FileUpload)
+	router.POST("/s3/upload", func(context *gin.Context) {
+		s3.Upload(context)
+		context = nil
+//		runtime.GC()
+//		s3.Upload(context,uploader)
+	})
 	router.GET("/s3/download", getS3FileDownload)
 
+//	router.Run("localhost:8080")
 
-	router.Run("localhost:8080")
+	s.ListenAndServe()
 }
 
 // CFS godoc
@@ -203,7 +226,7 @@ func s3FileUpload(c *gin.Context) {
 	//	log.Fatal(err)
 	//}
 
-	s3.Upload(c)
+//	s3.Upload(c)
 }
 
 // CFS godoc
