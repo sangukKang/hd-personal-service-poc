@@ -63,15 +63,35 @@ func Router() {
 		c.Set("s3sess", s3sess)
 		c.Next()
 	})
-	router.POST("/s3/upload", func(context *gin.Context) {
-		s3.Upload(context)
+
+	router.POST("/s3/upload/direct/single/buffer", func(context *gin.Context) {
+		s3.UploadSingleBuffer(context)
 		context = nil
 //		runtime.GC()
-//		s3.Upload(context,uploader)
 	})
-	router.GET("/s3/download", getS3FileDownload)
 
-//	router.Run("localhost:8080")
+	router.POST("/s3/upload/direct/single/file", func(context *gin.Context) {
+		s3.UploadSingle(context)
+		context = nil
+		//		runtime.GC()
+	})
+
+	router.POST("/s3/upload/direct/multi", func(context *gin.Context) {
+		s3.UploadMulti(context)
+		context = nil
+	})
+
+	router.POST("/s3/upload/direct/goroutine", func(context *gin.Context) {
+		s3.UploadGoRoutine(context)
+		context = nil
+	})
+
+	router.POST("/s3/upload/direct/efs", func(context *gin.Context) {
+		s3.UploadEfs(context)
+		context = nil
+	})
+	
+	router.GET("/s3/download", getS3FileDownload)
 
 	s.ListenAndServe()
 }
